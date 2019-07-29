@@ -1,0 +1,326 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>创新方法工作平台</title>
+<!--添加页面框架-->
+<link rel="import" id="frame" href="/webresources/common/html/appFrame.html">
+<script type="text/javascript" src="js/buttonAction.js"></script>
+<script type="text/javascript" src="./js/index.js"></script>
+<script type="text/javascript" src="js/common/spin.min.js"></script>
+<!-- 显示highchart -->
+<script type="text/javascript" src="./js/highcharts/highcharts.js"></script>
+<script type="text/javascript" src="./js/highcharts/exporting.js"></script>
+<script type="text/javascript" src="./js/highcharts/oldie.js"></script>
+<script type="text/javascript" src="./js/highcharts/series-label.js"></script>
+<script type="text/javascript" src="./js/highcharts/highcharts-zh_CN.js"></script>
+<link rel="stylesheet" href="/webresources/bootstrap/bootstrap-table/bootstrap-table.css"> 
+<script type="text/javascript" src="/webresources/ace-master/assets/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="/webresources/bootstrap/bootstrap-table/bootstrap-table.js"></script>
+<script type="text/javascript" src="/webresources/bootstrap/bootstrap-table/locale/bootstrap-table-zh-CN.js"></script>
+<script type="text/javascript" src="./js/canvg.min.js"></script>
+<!-- excel文件导入 -->
+<script lang="javascript" src="./js/xlsx/xlsx.full.min.js"></script>
+<!-- <link rel="stylesheet" href="./css/excelloadstyle.css" media="screen" type="text/css" /> -->
+<!-- 引入tensorflow.js -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.12.5"> </script>
+<script type="text/javascript" src="./js/calculate.js"></script>
+
+</head>
+<body class="no-skin">
+<div id="mainFunctionHtml">
+		<div id="myCustomLi">
+			<li class="active">
+				<a data-toggle="tab" href="#dataInfo">
+					<i class="green ace-icon fa fa-desktop bigger-120"></i>
+					输入数据
+				</a>
+			</li>
+			<li class="">
+				<a data-toggle="tab" href="#SPC_P">
+					<i class="purple ace-icon fa fa-pencil-square-o bigger-120"></i>
+					P控制图
+				</a>
+			</li>
+		</div>
+		<div id="myCustomTab">
+			<div id="dataInfo" class="tab-pane active">			
+				<div id="toolbar" class="btn-group">
+					<a class="btn btn-xs btn-info" onclick="" data-toggle="modal" data-target="#addInfoModal">
+						<i class="ace-icon glyphicon glyphicon-plus"></i>
+						添加样本
+					</a>
+					<button type="button" class="btn btn-xs btn-danger" style="margin-right: 40px" onclick="deleterow()">
+						<i class="glyphicon glyphicon-trash"></i>
+						删除
+					</button>
+					<button type="button" class="btn btn-xs btn-info" onclick="downloadexcel()">
+						<i class="glyphicon glyphicon-download">文件模板下载</i>
+					</button>
+					<button type="button" class="btn btn-xs btn-success" data-toggle="modal"
+						data-target="#addselectfilemodal">
+						<i class="glyphicon glyphicon-import">文件导入</i>
+					</button>
+				</div>
+				<table id="myBootstrapTtable" data-toggle="table" data-search="true" data-show-refresh="true"
+					data-show-toggle="true" data-toolbar="#toolbar" data-pagination="true"  class="table table-striped table-bordered"
+					data-side-pagination="client"  >
+					<thead>						
+						<tr>
+							<th class="col-sm-2 center" data-field="state" data-checkbox="true"></th>
+							<th data-field="procedureIdForDelete" data-visible="false">procedureId</th>
+				            <th class="col-sm-2 center" data-field="procedureId" data-formatter="generateId">序号</th>
+							<th class="col-sm-2 center" data-field="defectiveData">不合格品数目</th>
+							<th class="col-sm-2 center" data-field="sumData">检验产品总数</th>							
+							<th class="col-sm-2 center" data-field="action" data-formatter="actionFormatter" data-events="actionEvents">编辑</th>
+						</tr>
+					</thead>				
+				</table>
+				<br> <br>
+			</div>
+			
+			<div id="SPC_P" class="tab-pane">
+				<div>
+					<a class="btn btn-xs btn-primary" style="" onclick="calculateSPC()">
+						<i class="ace-icon fa fa-gears bigger-120"></i>计算分析
+					</a>
+					<a id="saveProject" class="btn btn-xs btn-info" style="" onclick="saveExcelData()">
+						<i class="ace-icon fa fa-save bigger-120"></i>保存
+					</a>
+					<a id="saveAsProject" class="btn btn-xs btn-success" style="" onclick="checkAndShowModal()">
+						<i class="ace-icon fa fa-random bigger-120"></i>另存为
+					</a>
+				</div>				
+	            <div id="analyzeResultSPC" style="height:500px;display:none"><!-- display:none -->
+					 <div style="float:left;width:25%;margin-top:10px">
+						<table id="sampleAnalysisTable" data-height="460" data-toggle="table" style="font-size:13px;"class="table table-hover">
+							<thead>
+								<tr>									
+									<th class="col-sm-1 center"data-formatter="generateId">计算结果</th>
+									<th class="col-sm-1 center"data-field="defectiveRate1">p</th>
+									<th class="col-sm-1 center"data-field="UCL1">UCL</th>
+									<th class="col-sm-1 center"data-field="LCL1">LCL</th>
+									<th class="col-sm-1 center"data-field="CL1">CL</th>					
+								</tr>
+							</thead>
+						</table>			
+					</div>
+					   <div id="container1" style="float:left;width:60%;height:480px">	</div>
+					   <div id="hideContainer"style="display:none">
+					       <form >
+					           <input id="yHightHide" type="text" name="yHightHide">
+					       </form>
+					   </div>
+					<div id="container2" style="float:right;width:15%;height:420px;margin-top:50px">
+						    <table id=conclutionTable style="font-size:13px">
+						     <tbody>
+								 <tr>
+									<td class='col-sm-1 center' style='vertical-align: middle'><strong>判定原则</strong></td>
+									<td>
+										(1)有超出控制线的点;<br/>
+										(2)连续7个点在中心线一侧;<br/>
+										(3)连续7个点上升或下降;<br/>
+										(4)多于3/4的点落在中心线1/3范围内;<br/>
+										(5)少于1/2的点落在中心线1/3范围内;<br/>
+										(6)呈有规律的变化。
+									</td>
+								</tr>
+								<tr>
+									<td class='col-sm-1 center'><strong>分析结论</strong></td>
+									<td id="td9" colspan="2" style="color:red"></td>
+								</tr>
+							</tbody>
+						</table>		
+					</div>		
+				</div>	
+				</div>			
+			</div>
+		</div>
+	</div>	
+	<!--手动添加数据模态框-->
+	<div class="modal fade" id="addInfoModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" id="newProjectModalTitle">
+						请输入数据信息：
+					</h4>
+				</div>
+				<div class="modal-body">
+					<!-- <%--输入框组--%> -->
+					<div class="input-group">
+						<span class="input-group-addon">不合格品数目：</span>
+						<input type="text" class="form-control" placeholder="请输入整数" id="defectiveData">
+					</div>
+					<br>
+					<div class="input-group">
+						<span class="input-group-addon">检验产品总数：</span>
+						<input type="text" class="form-control" placeholder="请输入整数" id="sumData">
+					</div>
+					<br>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">关闭
+					</button>
+					<button type="button" class="btn btn-primary" onclick="addSample()">
+						确认
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--帮助页面-->
+	<div id="helpHtml">
+			<div class="page-header">
+				<h1>P控制图App使用说明</h1>
+			</div>
+			<div class="alert alert-block alert-success" id="appHelp">
+				<div class="helpClass">
+					<p class="helpP">
+						<i class="ace-icon fa fa-check green"></i> 欢迎使用<strong
+							class="green">P控制图App</strong>, 使用流程如下：<br>
+						&nbsp;&nbsp;&nbsp;&nbsp;1.新建P控制图项目<br><img src="./files/imges/a.png" width="500px"
+																 height="300px"><br>
+						&nbsp;&nbsp;&nbsp;&nbsp;2.	输入数据（添加样本点）<br> <img src="./files/imges/b.png" width="500px"
+																 height="300px"><br>
+						&nbsp;&nbsp;&nbsp;&nbsp;3.编辑修改数据<br> <img src="./files/imges/c.png" width="500px"
+																 height="300px"><br>
+					   &nbsp;&nbsp;&nbsp;&nbsp;4.	计算分析<br> <img src="./files/imges/d.png" width="500px"
+																 height="300px"><br>
+					  &nbsp;&nbsp;&nbsp;&nbsp;5.生成报告<br> <img src="./files/imges/e.png" width="500px"
+																 height="300px"><br>		
+
+					<p>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- <div id="helpHtml">
+		<div class="page-header">
+			<h1>P控制图App使用说明</h1>
+		</div>
+		<div class="alert alert-block alert-success" id="appHelp">
+			<div class="helpClass">
+				<p class="helpP">
+					<i class="ace-icon fa fa-check green"></i> 欢迎使用<strong
+							class="green">7W4H App</strong>, 使用流程如下：<br>
+						&nbsp;&nbsp;&nbsp;&nbsp;1.新建P控制图项目<br><img src="./files/imges/a.png" width="500px"
+																 height="300px"><br>
+						&nbsp;&nbsp;&nbsp;&nbsp;2.	输入数据（添加样本点）<br> <img src="./files/imges/b.png" width="500px"
+																 height="300px"><br>
+						&nbsp;&nbsp;&nbsp;&nbsp;3.编辑修改数据<br> <img src="./files/imges/c.png" width="500px"
+																 height="300px"><br>
+					   &nbsp;&nbsp;&nbsp;&nbsp;4.	计算分析<br> <img src="./files/imges/d.png" width="500px"
+																 height="300px"><br>
+					  &nbsp;&nbsp;&nbsp;&nbsp;5.生成报告<br> <img src="./files/imges/e.png" width="500px"
+																 height="300px"><br>					
+				<p>
+			</div>
+		</div>
+	</div> -->
+	<!-- 导入文件 -->
+	<div class="modal fade" id="addselectfilemodal" tabindex="-1"
+		role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"
+						aria-hidden="true">&times;</button>
+					<h4 class="modal-title" id="myModalLabel">数据</h4>
+				</div>
+				<div class="modal-body" style="margin: auto;">
+					<table style="margin-top: 10px; margin-left: 40px;">
+							<tr>
+								<td>导入文件：</td>
+								<td>
+									<form action="jsp/inputDataExcel" method="post"
+										enctype="multipart/form-data" target="iframeInfo"
+										onsubmit="return checkfile();">
+										<input id="data-excel" accept="	application/vnd.ms-excel"
+											type="file" name='file' value=""
+											style="float: left; width: 190px" /> <input type="submit"
+											id="import_button" class="btn btn-xs btn-primary" onclick="openwin()" value="导入" />
+									</form><iframe name="iframeInfo" id="iframeInfo" style="display: none"></iframe>
+								</td>
+							</tr>
+							<tr>
+							<div id="spindiv"></div>
+							</tr>
+							<tr>
+								<td colspan="2"
+									style="text-align: center; horizon-align: middle;">
+									&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+							</tr>
+						</table>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!--另存为模态框-->
+	<div class="modal fade" id="saveAsNewProjectModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" id="newProjectModalTitle">
+						另存为一个新的项目
+					</h4>
+				</div>
+				<div class="modal-body">
+					<!-- <%--输入框组--%> -->
+					<div class="input-group">
+						<span class="input-group-addon">项目名：</span>
+						<input type="text" class="form-control" placeholder="请输入项目名称" id="newProjectName">
+					</div>
+					<br>
+					<div class="input-group">
+						<span class="input-group-addon">备 注：</span>
+						<input type="text" class="form-control" placeholder="请输入备注" id="newProjectRemark">
+					</div>
+					<br>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">关闭
+					</button>
+					<button type="button" class="btn btn-primary" id="addProButton" onclick="saveAsNewProject()">
+						确认
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!--修改模态框-->
+	<div class="modal fade" id="updatedatainfo" tabindex="-1"
+		role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"
+						aria-hidden="true">&times;</button>
+					<h4 class="modal-title" id="myModalLabel">修改样本数目</h4>
+				</div>
+				<div class="modal-body" style="margin: auto;">
+					<div id="spindivupdate"></div>
+					<form id="updateprocesspop">
+						<table style="width: 100%;font-size:13px" class="table table-striped table-bordered table-hover" id="modal-table">
+							<input type="hidden" id="procedureId_u" name="procedureId" size="24" ></input>							
+							<tr>
+	                    		<td>不合格品数目：</td>
+	                    		<td><input type="text" style="width:100%" id="defectiveData_u"></input></td>  	                    		               		                		  
+	                    	</tr>
+	                    	<tr>
+	                    		<td>检验产品总数：</td>
+	                    		<td><input type="text" style="width:100%" id="sumData_u"></input></td>                      		
+	                    	</tr>                    																						
+						</table>
+						<a class="btn btn-sm btn-info" style=""
+							onclick="editItem()"> <i class="ace-icon glyphicon glyphicon-ok bigger-120"></i>
+							提交
+						</a>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
